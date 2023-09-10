@@ -1,34 +1,23 @@
 import {FlatList} from 'react-native';
 import ListItem from './ListItem';
-import {useEffect, useState} from 'react';
+import {useMedia} from '../hooks/ApiHooks';
+import PropTypes from 'prop-types';
 
-const url =
-  'https://raw.githubusercontent.com/mattpe/wbma/master/docs/assets/test.json';
-
-const List = () => {
-  const [mediaArray, setMediaArray] = useState([]);
-
-  const loadMedia = async () => {
-    try {
-      const response = await fetch(url);
-      const json = await response.json();
-      //console.log(json);
-      setMediaArray(json);
-    } catch (error) {
-      console.error('loadMedia failed', error);
-    }
-  };
-
-  useEffect(() => {
-    loadMedia();
-  }, []);
+const List = ({navigation}) => {
+  const {mediaArray} = useMedia();
 
   return (
     <FlatList
       data={mediaArray}
-      renderItem={({item}) => <ListItem singleMedia={item} />}
+      renderItem={({item}) => (
+        <ListItem navigation={navigation} singleMedia={item} />
+      )}
     />
   );
+};
+
+List.propTypes = {
+  navigation: PropTypes.object,
 };
 
 export default List;
