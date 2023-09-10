@@ -1,22 +1,65 @@
-import React from 'react';
-import {Platform, SafeAreaView, StyleSheet, Text} from 'react-native';
+import React, {useContext, useEffect, useState} from 'react';
+import {MainContext} from '../contexts/MainContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {useTag} from '../hooks/ApiHooks';
+import {mediaUrl} from '../utils/app-config';
+import {Button, Card, Icon, ListItem} from '@rneui/themed';
+import ProfileForm from '../components/ProfileForm';
+import {ScrollView} from 'react-native';
 
 const Profile = (props) => {
+  const [avatar, setAvatar] = useState('http://placekitten.com/640');
+  const {getFilesByTag} = useTag();
+  const {setIsLoggedIn, user} = useContext(MainContext);
+  const logOut = async () => {
+    console.log('profile, logout');
+    try {
+      await AsyncStorage.clear();
+      setIsLoggedIn(false);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  const loadAvatar = async () => {
+    try {
+      const avatars = await getFilesByTag('avatar_' + user.user_id);
+      if (avatars.length > 0) {
+        setAvatar(mediaUrl + avatars.pop().filename);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  useEffect(() => {
+    loadAvatar();
+  }, []);
   return (
-    <SafeAreaView style={styles.container}>
-      <Text>Profile view</Text>
-    </SafeAreaView>
+    <ScrollView>
+      <Card>
+        <Card.Title>{user.username}</Card.Title>
+        <Card.Image source={{uri: avatar}} />
+        <ListItem>
+          <Icon name="email" />
+          <ListItem.Title>{user.email}</ListItem.Title>
+        </ListItem>
+        {user.full_name && (
+          <ListItem>
+            <Icon name="person" />
+            <ListItem.Title>{user.full_name}</ListItem.Title>
+          </ListItem>
+        )}
+        <ListItem>
+          <ListItem.Title>user id: {user.user_id}</ListItem.Title>
+        </ListItem>
+        <Card.Divider />
+        <Button title="Log out!" onPress={logOut}>
+          Log out!
+          <Icon name="logout" color="white" />
+        </Button>
+        <ProfileForm user={user} />
+      </Card>
+    </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: Platform.OS === 'android' ? 30 : 0,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
 
 export default Profile;
